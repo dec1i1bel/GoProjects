@@ -1,16 +1,29 @@
 package main
 
 import (
+	"os"
+	"proj1/conf"
 	"proj1/db"
 )
 
-type Album struct {
-	ID     int64
-	Title  string
-	Artist string
-	Price  float32
+type Product struct {
+	active string
+	name   string
 }
 
 func main() {
-	db.Connect("root", "vkshmuk0707", "tcp", "127.0.0.1:3306", "bitrloc")
+	conf.SetDbAccess()
+	db.Connect(
+		os.Getenv("USER"),
+		os.Getenv("PASSWD"),
+		os.Getenv("NET_TYPE"),
+		os.Getenv("HOST_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+
+	/*
+		- получить тестовые товары
+		- вывести их в api
+		- выввести на фронт в js
+	*/
 }

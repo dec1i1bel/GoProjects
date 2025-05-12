@@ -8,8 +8,9 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-var dbConnect *sql.DB
-var dbConf *mysql.Config
+var dbCon *sql.DB
+
+// var dbConf *mysql.Config
 
 type Conf struct {
 	user   string
@@ -35,13 +36,13 @@ func Connect(user string, passwd string, net string, host string, name string) *
 	createCon := conf.createConnection()
 
 	var err error
-	dbConnect, err = sql.Open("mysql", createCon.FormatDSN())
+	dbCon, err = sql.Open("mysql", createCon.FormatDSN())
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pingErr := dbConnect.Ping()
+	pingErr := dbCon.Ping()
 
 	if pingErr != nil {
 		log.Fatal(pingErr)
@@ -49,5 +50,5 @@ func Connect(user string, passwd string, net string, host string, name string) *
 
 	fmt.Println("DB Connected")
 
-	return dbConnect
+	return dbCon
 }

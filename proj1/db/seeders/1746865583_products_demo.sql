@@ -1,4 +1,4 @@
-INSERT INTO products
+INSERT INTO product
   (name, active, description, xml_id, width_mm, height_mm, weight_gr)
 VALUES
   ('product 1', 1, 'descr 1', '45rt67y78', 200.54, 356.87, 3478.87),

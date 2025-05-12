@@ -3,9 +3,11 @@ module proj1/app
 go 1.24.2
 
 replace proj1/db => ../db
+replace proj1/db/product => ../db/product
 replace proj1/conf => ../conf
 
 require proj1/db v0.0.0-00010101000000-000000000000
+require proj1/db/product v0.0.0-00010101000000-000000000000
 require proj1/conf v0.0.0-00010101000000-000000000000
 
 require (

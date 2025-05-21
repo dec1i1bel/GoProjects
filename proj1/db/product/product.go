@@ -27,6 +27,13 @@ func Find(dbCon *sql.DB, query string) ([]Product, error) {
 
 	for rows.Next() {
 		var product Product
-		// toDo ...
+
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("Find product. query: %q; error: %v", query, err)
+		}
+
+		products = append(products, product)
 	}
+
+	return products, nil
 }

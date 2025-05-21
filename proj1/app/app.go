@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"os"
 	"proj1/conf"
 	"proj1/db"
@@ -21,11 +23,18 @@ func main() {
 		os.Getenv("DB_NAME"),
 	)
 
-	products := product.Find(dbCon, "SELECT * FROM product")
-
-	/*
-		- получить тестовые товары
-		- вывести их в api
-		- выввести на фронт в js
+	/* toDo:
+	> получить тестовые товары
+		- тест
+	- вывести их в api
+	- выввести на фронт в js
 	*/
+
+	products, err := product.Find(dbCon, "SELECT * FROM product")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("success: all products found: %v\n", products)
 }

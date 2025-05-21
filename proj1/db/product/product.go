@@ -13,6 +13,9 @@ type Product struct {
 	xml_id      string
 	width_mm    float32
 	height_mm   float32
+	weight_gr   float32
+	include_ts  string
+	update_ts   string
 }
 
 func Find(dbCon *sql.DB, query string) ([]Product, error) {
@@ -26,13 +29,13 @@ func Find(dbCon *sql.DB, query string) ([]Product, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var product Product
+		var p Product
 
-		if err := rows.Err(); err != nil {
+		if err := rows.Scan(&p.id, &p.active, &p.name, &p.description, &p.xml_id, &p.width_mm, &p.height_mm, &p.weight_gr, &p.include_ts, &p.update_ts); err != nil {
 			return nil, fmt.Errorf("Find product. query: %q; error: %v", query, err)
 		}
 
-		products = append(products, product)
+		products = append(products, p)
 	}
 
 	return products, nil

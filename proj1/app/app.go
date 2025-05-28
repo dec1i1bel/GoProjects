@@ -1,20 +1,35 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
+	"net/http"
 	"os"
 	"proj1/conf"
 	"proj1/db"
 	"proj1/db/product"
-)
 
-var dbCon *sql.DB
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
 	conf.SetDbAccess()
 
+	/* toDo:
+	+ получить тестовые товары
+	+ вывести их в api
+		+ перенести получение в метод, подключить его к роутеру
+		+ в db\product корректно сформировать объект для json
+		+ в app сконвертировать struct в json
+	- получить на фронт в js
+	*/
+
+	router := gin.Default()
+	router.GET("/products", findProducts)
+
+	router.Run("localhost:8080")
+}
+
+func findProducts(context *gin.Context) {
 	dbCon := db.Connect(
 		os.Getenv("USER"),
 		os.Getenv("PASSWD"),
@@ -23,18 +38,11 @@ func main() {
 		os.Getenv("DB_NAME"),
 	)
 
-	/* toDo:
-	+ получить тестовые товары
-		+ тест
-	- вывести их в api
-	- выввести на фронт в js
-	*/
-
-	products, err := product.Find(dbCon, "SELECT * FROM product")
+	products, err := product.FindAll(dbCon)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("error getting products: %v", err)
 	}
 
-	fmt.Printf("success: all products found: %v\n", products)
+	context.JSON(http.StatusOK, products)
 }

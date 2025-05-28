@@ -6,24 +6,23 @@ import (
 )
 
 type Product struct {
-	id          int64
-	active      string
-	name        string
-	description string
-	xml_id      string
-	width_mm    float32
-	height_mm   float32
-	weight_gr   float32
-	include_ts  string
-	update_ts   string
+	Id          int64
+	Active      string
+	Name        string
+	Description string
+	Xml_id      string
+	Width_mm    float32
+	Height_mm   float32
+	Weight_gr   float32
 }
 
-func Find(dbCon *sql.DB, query string) ([]Product, error) {
+func FindAll(dbCon *sql.DB) ([]Product, error) {
 	var products []Product
-	rows, err := dbCon.Query(query)
+
+	rows, err := dbCon.Query("SELECT id, active, name, description, xml_id, width_mm, height_mm, weight_gr FROM product")
 
 	if err != nil {
-		return nil, fmt.Errorf("error find product. query: %q, error: %v", query, err)
+		fmt.Printf("Error find all products: %v", err)
 	}
 
 	defer rows.Close()
@@ -31,8 +30,8 @@ func Find(dbCon *sql.DB, query string) ([]Product, error) {
 	for rows.Next() {
 		var p Product
 
-		if err := rows.Scan(&p.id, &p.active, &p.name, &p.description, &p.xml_id, &p.width_mm, &p.height_mm, &p.weight_gr, &p.include_ts, &p.update_ts); err != nil {
-			return nil, fmt.Errorf("Find product. query: %q; error: %v", query, err)
+		if err := rows.Scan(&p.Id, &p.Active, &p.Name, &p.Description, &p.Xml_id, &p.Width_mm, &p.Height_mm, &p.Weight_gr); err != nil {
+			fmt.Printf("Error next product: %v", err)
 		}
 
 		products = append(products, p)

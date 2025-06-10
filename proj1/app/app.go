@@ -19,7 +19,8 @@ func main() {
 		+ все товары
 		+ товар по id
 		> POST добавление товара
-			https://go.dev/doc/tutorial/web-service-gin#add_item
+			+ код
+			- тест
 		- GET удаление товара
 	- добавление пользователя по email и паролю
 	- авторизация
@@ -34,7 +35,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/products", findProducts)
 	router.GET("/product/:id", findProductById)
-	// router.POST("/product/add", addProduct)
+	router.POST("/product/add", insertProduct)
 
 	router.Run("localhost:8080")
 }
@@ -66,6 +67,12 @@ func findProductById(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
-func addProduct(c *gin.Context) (int64, error) {
-	var product Product
+func insertProduct(c *gin.Context) {
+	newProductId, err := product.Insert(c)
+
+	if err != nil {
+		fmt.Printf("error add product: %v", c.Param("product"))
+	}
+
+	c.JSON(http.StatusCreated, newProductId)
 }

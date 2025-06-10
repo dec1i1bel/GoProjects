@@ -1,10 +1,15 @@
 package product
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"proj1/db"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Product struct {
@@ -57,6 +62,53 @@ func FindById(id int64) (Product, error) {
 	}
 
 	return product, nil
+}
+
+func Insert(c *gin.Context) (string, error) {
+	var p Product
+
+	if err := c.BindJSON(&p); err != nil {
+		return "error", fmt.Errorf("Error binding new product json to Product object. Product: %q, error: %v", c.product, err)
+	}
+
+	dbCon := CreateDbConnection()
+
+	// toDo: doc insert row in Go: https://golangbot.com/mysql-create-table-insert-row/#insert-row
+	query := "INSERT INTO product (name, active, description, xml_id, width_mm, height_mm, weight_gr) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	// create a context with a timeout so that the query times out in case of any network, partition or runtime errors
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	// закроет соединение с БД
+	defer cancelfunc()
+
+	// create a prepared statement for the insert query using this template
+	stmt, err := dbCon.PrepareContext(ctx, query)
+
+	if err != nil {
+		log.Printf("Error <%s> preparing SQL statement", err)
+		return "error", err
+	}
+
+	// close statement after use
+	defer stmt.Close()
+
+	// The ExecContext method of the DB package executes any query that doesn’t return any rows
+	res, err := stmt.ExecContext(ctx, p.Name, p.Active, p.Description, p.Xml_id, p.Height_mm, p.Weight_gr)
+
+	if err != nil {
+		log.Printf("Error executing context on inserting product: %s", err)
+		return "error", err
+	}
+
+	row, err := res.RowsAffected()
+
+	if err != nil {
+		log.Printf("Error getting rows affected on insering product: %s", err)
+		return "error", err
+	}
+
+	log.Printf("%d product created", row)
+
+	return "success", nil
 }
 
 func CreateDbConnection() *sql.DB {

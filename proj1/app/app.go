@@ -30,6 +30,15 @@ func main() {
 		- неавторизованному - получение максимум трёх товаров
 		- авторизованному - все роуты без ограничений
 	- у авторизованного - временная сессия по токену. по истечении срока - запрос повторной авторизации по api
+
+	команда добавления товара:
+	toDo: дописать
+	curl http://localhost:8080/product/add \
+		--include \
+		--header "Content-Type: application/json" \
+		--request "POST" \
+		-data {"name":"prod test","active":"Y","description":"new product added",""}
+
 	*/
 
 	router := gin.Default()

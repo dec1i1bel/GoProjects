@@ -68,7 +68,7 @@ func Insert(c *gin.Context) (string, error) {
 	var p Product
 
 	if err := c.BindJSON(&p); err != nil {
-		return "error", fmt.Errorf("Error binding new product json to Product object. Product: %q, error: %v", c.product, err)
+		return "error", fmt.Errorf("Error binding new product json to Product object: %v", err)
 	}
 
 	dbCon := CreateDbConnection()

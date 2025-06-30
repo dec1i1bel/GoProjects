@@ -7,20 +7,21 @@ import (
 	"log"
 	"os"
 	"proj1/db"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Product struct {
-	Id          int64   `json:"id,omitempty"`
-	Active      string  `json:"active"`
-	Name        string  `json:"name"`
-	Description string  `json:"description,omitempty"`
-	Xml_id      string  `json:"xml-id,omitempty"`
-	Width_mm    float32 `json:"width,omitempty"`
-	Height_mm   float32 `json:"height,omitempty"`
-	Weight_gr   float32 `json:"weight,omitempty"`
+	Id          *int64   `json:"id,omitempty"`
+	Active      string   `json:"active"`
+	Name        string   `json:"name"`
+	Description *string  `json:"description,omitempty"`
+	Xml_id      *string  `json:"xml_id,omitempty"`
+	Width_mm    *float32 `json:"width_mm,omitempty"`
+	Height_mm   *float32 `json:"height_mm,omitempty"`
+	Weight_gr   *float32 `json:"weight_mm,omitempty"`
 }
 
 // func FindAll(dbCon *sql.DB) ([]Product, error) {
@@ -71,9 +72,52 @@ func Insert(c *gin.Context) (string, error) {
 		return "error binding json to product", err
 	}
 
+	sqlFields := "active, name"
+	var sqlValues string
+	var params []interface{}
+	params = append(params, p.Active)
+	params = append(params, p.Name)
+
+	if p.Description != nil {
+		sqlFields += ", description"
+		params = append(params, p.Description)
+	}
+
+	if p.Xml_id != nil {
+		sqlFields += ", xml_id"
+		params = append(params, p.Xml_id)
+	}
+
+	if p.Width_mm != nil {
+		sqlFields += ", width_mm"
+		params = append(params, p.Width_mm)
+	}
+
+	if p.Height_mm != nil {
+		sqlFields += ", height_mm"
+		params = append(params, p.Height_mm)
+	}
+
+	if p.Weight_gr != nil {
+		sqlFields += ", weight_gr"
+		params = append(params, p.Weight_gr)
+	}
+
+	fieldsSpl := strings.Split(sqlFields, ", ")
+
+	for i := 0; i < len(fieldsSpl); i++ {
+		sqlValues += "?, "
+	}
+
+	sqlValues = strings.Trim(sqlValues, ", ")
+
+	fmt.Println(sqlFields)
+	fmt.Println(sqlValues)
+
 	dbCon := CreateDbConnection()
 
-	query := "INSERT INTO product (active, name) VALUES (?, ?)"
+	query := "INSERT INTO product (" + sqlFields + ") VALUES (" + sqlValues + ")"
+	// fmt.Println(query)
 	// create a context with a timeout so that the query times out in case of any network, partition or runtime errors
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	// close db connection
@@ -90,18 +134,18 @@ func Insert(c *gin.Context) (string, error) {
 	defer stmt.Close()
 
 	// The ExecContext method of the DB package executes any query that doesn’t return any rows
-	res, err := stmt.ExecContext(ctx, p.Active, p.Name)
+	res, err := stmt.ExecContext(ctx, params...)
 
 	if err != nil {
 		log.Printf("Error inserting product: %s", err)
-		return "error", err
+		return "error inserting product", err
 	}
 
 	row, err := res.RowsAffected()
 
 	if err != nil {
 		log.Printf("Error getting rows affected on insering product: %s", err)
-		return "error", err
+		return "error getting rows affected on insering product", err
 	}
 
 	log.Printf("%d ==product created==", row)

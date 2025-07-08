@@ -11,20 +11,22 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type Product struct {
-	Id          *int64   `json:"id,omitempty"`
-	Active      string   `json:"active"`
-	Name        string   `json:"name"`
-	Description *string  `json:"description,omitempty"`
-	Xml_id      *string  `json:"xml_id,omitempty"`
-	Width_mm    *float32 `json:"width_mm,omitempty"`
-	Height_mm   *float32 `json:"height_mm,omitempty"`
-	Weight_gr   *float32 `json:"weight_mm,omitempty"`
+	Id          *int64  `json:"id,omitempty"`
+	Active      int8    `json:"active" validate:"min=0,max=1"`
+	Name        string  `json:"name" validate:"required"`
+	Description *string `json:"description,omitempty"`
+	Xml_id      *string `json:"xml_id,omitempty"`
+
+	// toDo: валидация: больше нуля, не более двух знаков после запятой
+	Width_mm  *float32 `json:"width_mm,omitempty"`
+	Height_mm *float32 `json:"height_mm,omitempty"`
+	Weight_gr *float32 `json:"weight_mm,omitempty"`
 }
 
-// func FindAll(dbCon *sql.DB) ([]Product, error) {
 func FindAll() ([]Product, error) {
 	var products []Product
 	dbCon := CreateDbConnection()
@@ -72,11 +74,20 @@ func Insert(c *gin.Context) (string, error) {
 		return "error binding json to product", err
 	}
 
+	validator := validator.New()
+	err := validator.Struct(p)
+
+	if err != nil {
+		return "error validating", err
+	}
+
 	sqlFields := "active, name"
 	var sqlValues string
 	var params []interface{}
 	params = append(params, p.Active)
 	params = append(params, p.Name)
+
+	// toDo: генерация текста запроса циклом
 
 	if p.Description != nil {
 		sqlFields += ", description"
@@ -117,23 +128,17 @@ func Insert(c *gin.Context) (string, error) {
 	dbCon := CreateDbConnection()
 
 	query := "INSERT INTO product (" + sqlFields + ") VALUES (" + sqlValues + ")"
-	// fmt.Println(query)
-	// create a context with a timeout so that the query times out in case of any network, partition or runtime errors
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
-	// close db connection
 	defer cancelfunc()
 
-	// create a prepared statement for the query using the template
 	stmt, err := dbCon.PrepareContext(ctx, query)
 
 	if err != nil {
 		return "error preparing sql statement", err
 	}
 
-	// close statement after use
 	defer stmt.Close()
 
-	// The ExecContext method of the DB package executes any query that doesn’t return any rows
 	res, err := stmt.ExecContext(ctx, params...)
 
 	if err != nil {

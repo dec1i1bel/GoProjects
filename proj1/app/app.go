@@ -27,10 +27,12 @@ func main() {
 		> POST добавление товара с произвольным набором полей в запросе
 			+ добавление товара
 			+ debug
-			+ тест на корректных данных в запросе
-			- валидация полей
-			- тест на некорректнеых
-			- логирование запросов в файл
+			+ тест на корректных данных в запросе"ctrl+s"
+			+ валидация полей https://ru.hexlet.io/courses/go-web-development/lessons/validation/theory_unit
+			+ тест на некорректных
+			- toDo в product.go
+			- написать тесты
+			- логирование в файл
 	- добавление пользователя по email и паролю
 	- авторизация
 		- отправка кода подтверждения на email
@@ -39,11 +41,13 @@ func main() {
 		- неавторизованному - получение максимум трёх товаров
 		- авторизованному - все роуты без ограничений
 	- у авторизованного - временная сессия по токену. по истечении срока - запрос повторной авторизации по api
+	- реализовать остальные запросы в api другими библиотеками, такими как fiber и тд
 
 	примеры запросов curl:
 
-	curl http://localhost:8080/product/add -X POST -H 'Content-Type: application/json' -d '{"name":"name1"}'
-	curl http://localhost:8080/product/add -X POST -H 'Content-Type: application/json' -d '{"active":"y", "name":"name1"}'
+	curl http://localhost:8080/product/add -X POST -H 'Content-Type: application/json' -d '{"active":1, "name":"name1"}'
+	curl http://localhost:8080/product/add -X POST -H 'Content-Type: application/json' -d '{"active":1, "name":"name2", "description":"prod descr yt54y543"}'
+	curl http://localhost:8080/product/add -X POST -H 'Content-Type: application/json' -d '{"active":0, "name":"name3", "description":"prod descr yt54y543", "xml_id":"g67758t787tvg"}'
 	curl http://localhost:8080/product/delete/1
 
 	*/

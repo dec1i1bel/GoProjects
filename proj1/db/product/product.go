@@ -87,8 +87,6 @@ func Insert(c *gin.Context) (string, error) {
 	params = append(params, p.Active)
 	params = append(params, p.Name)
 
-	// toDo: генерация текста запроса циклом
-
 	if p.Description != nil {
 		sqlFields += ", description"
 		params = append(params, p.Description)
@@ -183,11 +181,9 @@ func Delete(id int64) (string, error) {
 	row, err := res.RowsAffected()
 
 	if err != nil {
-		log.Printf("Error getting rows affected on deleting product: %s", err)
+		log.Printf("Error getting rows affected on deleting product: %v", row)
 		return "error", err
 	}
-
-	log.Printf("%d ==product deleted==", row)
 
 	return "success", nil
 }

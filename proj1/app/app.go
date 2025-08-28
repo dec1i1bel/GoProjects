@@ -30,7 +30,6 @@ func main() {
 			+ тест на корректных данных в запросе"ctrl+s"
 			+ валидация полей https://ru.hexlet.io/courses/go-web-development/lessons/validation/theory_unit
 			+ тест на некорректных
-			- toDo в product.go
 			- написать тесты
 			- логирование в файл
 	- добавление пользователя по email и паролю

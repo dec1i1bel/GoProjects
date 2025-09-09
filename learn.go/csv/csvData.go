@@ -1,5 +1,9 @@
 package main
 
+// запуск:
+// go run csvData.go csv.data output.data
+// output.data - генерируется при выполнении
+
 import (
 	"encoding/csv"
 	"fmt"
@@ -58,8 +62,9 @@ func saveCSVFile(filepath string) error {
 		temp := []string{row.Name, row.Surname, row.Number, row.LastAccess}
 		_ = csvwriter.Write(temp)
 		csvwriter.Flush()
-		return nil
 	}
+
+	return nil
 }
 
 // с помощью readCSVFile() помещает прочитанное в срез myData. Помните, что lines — это срез с двумя измерениями и что каждая строка в lines уже разделена на поля.

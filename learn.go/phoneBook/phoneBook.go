@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"path"
 	"strconv"
+	"time"
 )
 
 type Entry struct {
-	Name    string
-	Surname string
-	Tel     string
+	Name       string
+	Surname    string
+	Tel        string
+	LastAccess string
 }
 
 var data = []Entry{}
@@ -39,7 +40,8 @@ func populate(n int) {
 		name := getString(4)
 		surname := getString(5)
 		n := strconv.Itoa(random(100, 199))
-		data = append(data, Entry{name, surname, n})
+		t := time.Now().Format(time.RFC850)
+		data = append(data, Entry{name, surname, n, t})
 	}
 }
 
@@ -66,6 +68,39 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
+// телефонаня книга заполняется из csv-файла
+func main() {
+	arguments := os.Args
+	if len((arguments)) == 1 {
+		fmt.Println("Usage: insert|delete|search|list <arguments>")
+		return
+	}
+	// если файла не существует - создаём пустой
+	_, err := os.Stat(csv)
+	if err != nil {
+		fmt.Println("creating", csv)
+		// создаём файл
+		f, err := os.Create(csv)
+		if err != nil {
+			f.Close()
+			fmt.Println(err)
+			return
+		}
+		f.Close()
+	}
+
+	fileInfo, err := os.Stat(csv)
+	// это обычный файл UNIX?
+	mode := fileInfo.Mode()
+	if !mode.IsRegular() {
+		fmt.Println(csv, "not a regular UNIX file")
+		return
+	}
+}
+
+/*
+телефонная книгка запоняется хардкодом
+
 func main() {
 	args := os.Args
 
@@ -76,9 +111,10 @@ func main() {
 		return
 	}
 
-	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471"})
-	data = append(data, Entry{"Mary", "Doe", "2109416871"})
-	data = append(data, Entry{"John", "Black", "2109416123"})
+	t := time.Now().Format(time.RFC850)
+	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
+	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
+	data = append(data, Entry{"John", "Black", "2109416123", t})
 	populate(3)
 
 	// какая команда была введена?
@@ -105,3 +141,4 @@ func main() {
 		fmt.Println("Not a valid option")
 	}
 }
+*/

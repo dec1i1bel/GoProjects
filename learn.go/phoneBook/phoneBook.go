@@ -16,6 +16,7 @@ type Entry struct {
 }
 
 var data = []Entry{}
+var index = map[string]int
 
 // линейный поиск по срезу data. это медленно, но достаточно при небольшом количестве записей
 func search(key string) *Entry {
@@ -68,19 +69,20 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-// телефонаня книга заполняется из csv-файла
+// телефонная книга заполняется из csv-файла
 func main() {
 	arguments := os.Args
+	db := "db.csv"
 	if len((arguments)) == 1 {
 		fmt.Println("Usage: insert|delete|search|list <arguments>")
 		return
 	}
 	// если файла не существует - создаём пустой
-	_, err := os.Stat(csv)
+	_, err := os.Stat(db)
 	if err != nil {
-		fmt.Println("creating", csv)
+		fmt.Println("creating", db)
 		// создаём файл
-		f, err := os.Create(csv)
+		f, err := os.Create(db)
 		if err != nil {
 			f.Close()
 			fmt.Println(err)
@@ -89,12 +91,27 @@ func main() {
 		f.Close()
 	}
 
-	fileInfo, err := os.Stat(csv)
+	fileInfo, err := os.Stat(db)
 	// это обычный файл UNIX?
 	mode := fileInfo.Mode()
 	if !mode.IsRegular() {
-		fmt.Println(csv, "not a regular UNIX file")
+		fmt.Println(db, "not a regular UNIX file")
 		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = createIndex()
+	if err != nil {
+		fmt.Println("Cannot create index")
+		return
+	}
+
+	switch arguments[1] {
+	// toDo
 	}
 }
 

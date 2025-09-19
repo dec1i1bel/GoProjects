@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ type Entry struct {
 }
 
 var data = []Entry{}
-var index = map[string]int
+var index = make(map[string]int)
 var db = "db.csv"
 
 // линейный поиск по срезу data. это медленно, но достаточно при небольшом количестве записей
@@ -154,22 +155,24 @@ func deleteEntry(key string) error {
 	return nil
 }
 
-// toDo: matchTel - аналогично matchInt из regexp/intRE.go. учесть, что возможен +7... или прочие знаки кроме цифр
 func matchTel(tel string) bool {
-
+	t := []byte(tel)
+	ctel := regexp.MustCompile(`^+?\d+$`)
+	return ctel.Match(t)
 }
 
-// toDo: это копипаст из другого файла. доработать
-func initS(N, S string, Y int) Entry {
-	if Y < 2000 {
-		return Entry{Name: N, Surname: S, Year: 2000}
+func initS(Name, Surname, Tel, LastAccess string) Entry {
+	isTelMatch := matchTel(Tel)
+	if !isTelMatch {
+		fmt.Println("incorrect phone")
+		return Entry{}
 	}
 
-	return Entry{Name: N, Surname: S, Year: Y}
+	return Entry{Name: Name, Surname: Surname, Tel: Tel, LastAccess: LastAccess}
 }
 
 // toDo
-func insert() {
+func insert(entry Entry) error {
 
 }
 

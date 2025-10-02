@@ -1,5 +1,5 @@
-* закладка: Улучшение приложения телефонной книги -> Работа с CSV-файлами
-* имена файлов .go совпадают с книгой. чтобы получить поснения в книге по коду - поиск в ней по имени файла
-* где записи по книге:
-    * цитаты в Блокноте в книге
-    * файл md в Documents/go
+тест:
++ go run phoneBook.go list
++ go run phoneBook.go delete
++ go run phoneBook.go search
+> go run phoneBook.go insert

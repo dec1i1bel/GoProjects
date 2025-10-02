@@ -21,15 +21,26 @@ type Entry struct {
 var data = []Entry{}
 var index = make(map[string]int)
 var db = "db.csv"
+var curTime = strconv.FormatInt(time.Now().Unix(), 10)
 
 // линейный поиск по срезу data. это медленно, но достаточно при небольшом количестве записей
 func search(key string) *Entry {
+	/* поиск без исопльзования индекса
 	for i, v := range data { // i,v - индекс и значение элемента
 		if v.Tel == key {
 			return &data[i]
 		}
 	}
 	return nil
+	*/
+
+	// поиск использует индекс:
+	i, ok := index[key]
+	if !ok {
+		return nil
+	}
+	data[i].LastAccess = curTime
+	return &data[i]
 }
 
 // список записей среза
@@ -51,7 +62,6 @@ func populate(n int) {
 }
 
 // объяс-е кода ф-ии - в randomValuesGenerating/newPass.go
-// toDo: ф-я ген-ет строку только из символов a-z,A-Z (т.к. в имени и фамилии дргуих не бывает)
 func getString(len int) string {
 	temp := ""
 	startChar := "!"
@@ -136,14 +146,14 @@ func deleteEntry(key string) error {
 	// поиск по индексу телефонного номера, чтобы найти место записи в срезе с данными. Если его нет - сообщение об ошибке
 	i, ok := index[key]
 	if !ok {
-		return fmt.Errorf("%s cannot be found!", key)
+		return fmt.Errorf("%s cannot be found", key)
 	}
 
 	// Если номер телефона найден, то вы удаляете соответствующую запись из среза data
-	// склеивания в новый срез части до элемента и после`
+	// путём склеивания в новый срез части до элемента и после`
 	data = append(data[:i], data[i+1:]...)
 
-	// обновить индекс (удалить из нег запись)‚ поскольку забота о нем — та цена, которую вы платите за дополнительную скорость, возникающую благодаря ему
+	// обновить индекс (удалить из него запись). забота о нем — та цена, которую вы платите за дополнительную скорость, возникающую благодаря ему
 	delete(index, key)
 
 	// сохранить обновленные данные
@@ -155,25 +165,44 @@ func deleteEntry(key string) error {
 	return nil
 }
 
+func insert(pS Entry) error {
+	// если запись уже есть - не добавляем
+	_, ok := index[(pS).Tel]
+	if ok {
+		return fmt.Errorf("%s already exists", pS.Tel)
+	}
+
+	data = append(data, pS)
+
+	/* заполнение хардкодом
+	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
+	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
+	data = append(data, Entry{"John", "Black", "2109416123", t})
+	*/
+
+	// обновить индекс
+	_ = createIndex()
+	err := saveCSVFile(db)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func matchTel(tel string) bool {
 	t := []byte(tel)
 	ctel := regexp.MustCompile(`^+?\d+$`)
 	return ctel.Match(t)
 }
 
-func initS(Name, Surname, Tel, LastAccess string) Entry {
+func initS(Name, Surname, Tel string) Entry {
 	isTelMatch := matchTel(Tel)
 	if !isTelMatch {
 		fmt.Println("incorrect phone")
 		return Entry{}
 	}
 
-	return Entry{Name: Name, Surname: Surname, Tel: Tel, LastAccess: LastAccess}
-}
-
-// toDo
-func insert(entry Entry) error {
-
+	return Entry{Name: Name, Surname: Surname, Tel: Tel, LastAccess: curTime}
 }
 
 // телефонная книга заполняется из csv-файла
@@ -205,35 +234,43 @@ func main() {
 		return
 	}
 
+	lines, err := readCSVFile(db)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	for _, line := range lines {
+		linePrepared := strings.Fields(line[0]) // срез из строк ,разделённых пробелом
+		temp := Entry{
+			Name:       linePrepared[0],
+			Surname:    linePrepared[1],
+			Tel:        linePrepared[2],
+			LastAccess: linePrepared[3],
+		}
+
+		data = append(data, temp)
+	}
+
 	err = createIndex()
 	if err != nil {
-		fmt.Println("Cannot create index")
+		fmt.Println(err)
 		return
 	}
 
 	switch arguments[1] {
 	case "insert":
 		if len(arguments) != 5 {
-			fmt.Println("Usage: insert <Name>, <Surname> <Telephone>")
+			fmt.Println("Usage: insert Name Surname Telephone")
 			return
 		}
 
 		t := strings.ReplaceAll(arguments[4], "-", "")
 
-		if !matchTel(t) {
-			fmt.Println("Not a valid telephone number:", t)
-			return
-		}
-
-		temp := initS(arguments[2], arguments[3], t)
-
-		if temp != nil {
-			err := insert(temp)
+		entry := initS(arguments[2], arguments[3], t)
+		fmt.Println()
+		if entry.Name != "" {
+			err := insert(entry)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -280,48 +317,3 @@ func main() {
 		fmt.Println("Not a valid option")
 	}
 }
-
-/*
-телефонная книгка запоняется хардкодом
-
-func main() {
-	args := os.Args
-
-	if len(args) == 1 {
-		// если аргументов нет, то завершаем приложение
-		exe := path.Base(args[0])
-		fmt.Printf("Usage: %s search|list <args>\n", exe)
-		return
-	}
-
-	t := time.Now().Format(time.RFC850)
-	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
-	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
-	data = append(data, Entry{"John", "Black", "2109416123", t})
-	populate(3)
-
-	// какая команда была введена?
-	switch args[1] {
-	// поиск
-	case "search":
-		if len(args) != 3 {
-			fmt.Println("Usage: search phone")
-			return
-		}
-
-		result := search(args[2])
-
-		if result == nil {
-			fmt.Println("Entry not found: ", args[2])
-			return
-		}
-
-		fmt.Println(*result)
-	// вывод списка
-	case "list":
-		list()
-	default:
-		fmt.Println("Not a valid option")
-	}
-}
-*/

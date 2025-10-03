@@ -18,9 +18,18 @@ func mapTo2Slices() {
 	m["k_1"] = "val_one"
 	m["k_2"] = "val_two"
 	m["k_3"] = "val_three"
-	// toDo: дальше по задаче
+
+	// toDo
+	skeys := make([]string, 0)
+	svals := make([]string, 0)
+
+	for k, v := range m {
+		skeys = append(skeys, k)
+		svals = append(svals, v)
+	}
 }
 
 func main() {
 	arrToMap()
+	mapTo2Slices()
 }

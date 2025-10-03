@@ -11,7 +11,7 @@ func arraysToSlice(arr1 []int, arr2 []int) []int {
 	return res
 }
 
-// создаём массив из двух массивовnthvby
+// создаём массив из двух массивов
 func arraysToArray(arr1 []int, arr2 []int) []int {
 	res := []int{}
 

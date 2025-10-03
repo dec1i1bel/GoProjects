@@ -9,7 +9,6 @@ func main() {
 
 	fmt.Println()
 
-	// аналог while
 	i := 0
 
 	for {
@@ -23,7 +22,6 @@ func main() {
 
 	fmt.Println()
 
-	// это срез. но range работает с массивами
 	aSlice := []int{-1, 2, 1, -1, 2, -2}
 
 	for i, v := range aSlice {

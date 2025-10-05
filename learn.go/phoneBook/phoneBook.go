@@ -15,30 +15,24 @@ type Entry struct {
 	Name       string
 	Surname    string
 	Tel        string
-	LastAccess string
+	LastAccess int64
 }
 
 var data = []Entry{}
 
-// var indexByTel = make(map[string]int) // индекс db.csv по номеру телефона
-var indexByLastAccess = make(map[string]int) // индекс db.csv по полю LastAccess
+var indexByPhone = make(map[string]int)     // индекс db.csv по номеру телефона
+var indexByLastAccess = make(map[int64]int) // индекс db.csv по полю LastAccess
 var db = "db.csv"
-var curTime = strconv.FormatInt(time.Now().Unix(), 10)
 
-// линейный поиск по срезу data. это медленно, но достаточно при небольшом количестве записей
-func search(key string) *Entry {
-	/* поиск без исопльзования индекса
-	for i, v := range data { // i,v - индекс и значение элемента
-		if v.Tel == key {
-			return &data[i]
-		}
-	}
-	return nil
-	*/
+var decimalBase int = 10
+var int64BitSize int = 64
+var fieldsDelimiter string = "#"
 
-	// поиск использует индекс:
-	// i, ok := indexByTel[key]
-	i, ok := indexByLastAccess[key]
+// var curTime = strconv.FormatInt(time.Now().Unix(), decimalBase)
+var curTime = time.Now().Unix()
+
+func searchByPhone(key string) *Entry {
+	i, ok := indexByPhone[key]
 	if !ok {
 		return nil
 	}
@@ -46,7 +40,6 @@ func search(key string) *Entry {
 	return &data[i]
 }
 
-// список записей среза
 func list() {
 	for _, v := range data {
 		fmt.Println(v)
@@ -59,18 +52,11 @@ func populate(n int) {
 		name := getString(4)
 		surname := getString(5)
 		n := strconv.Itoa(random(100, 199))
-		t := time.Now().Format(time.RFC850)
-		data = append(data, Entry{name, surname, n, t})
+		data = append(data, Entry{name, surname, n, curTime})
 	}
-
-	/* заполнение хардкодом
-	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
-	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
-	data = append(data, Entry{"John", "Black", "2109416123", t})
-	*/
 }
 
-// объяс-е кода ф-ии - в randomValuesGenerating/newPass.go
+// объяс-е кода - в randomValuesGenerating/newPass.go
 func getString(len int) string {
 	temp := ""
 	startChar := "!"
@@ -87,25 +73,29 @@ func getString(len int) string {
 	return temp
 }
 
-// объяс-е кода ф-ии - в randomValuesGenerating/randomNumbers.go
+// объяс-е кода - в randomValuesGenerating/randomNumbers.go
 func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-/* получаем доступ ко всему срезу data и помещаем пары индекса и значения среза на карту, используя значение в качестве ключа для карты и индекс среза в качестве значения карты
-func createIndexByTel() error {
-	indexByTel = make(map[string]int)
+func createIndexByPhone() error {
+	indexByPhone = make(map[string]int)
 	for i, k := range data {
 		key := k.Tel
-		indexByTel[key] = i
+		indexByPhone[key] = i
 	}
 
 	return nil
 }
-*/
 
 func createIndexByLastAccess() error {
+	indexByLastAccess := make(map[int64]int)
 
+	for k, v := range data {
+		indexByLastAccess[v.LastAccess] = k
+	}
+
+	return nil
 }
 
 func readCSVFile(filepath string) ([][]string, error) {
@@ -123,10 +113,7 @@ func readCSVFile(filepath string) ([][]string, error) {
 
 	defer f.Close()
 
-	// CSV-файл читается весь сразу - ReadAll() (построчно - Read())
-	// тип данных lines — [][]string
-	lines, err := csv.NewReader(f).ReadAll()
-
+	lines, err := csv.NewReader(f).ReadAll() // построчно - Read()
 	if err != nil {
 		return [][]string{}, err
 	}
@@ -144,11 +131,12 @@ func saveCSVFile(filepath string) error {
 
 	defer csvfile.Close()
 	csvwriter := csv.NewWriter(csvfile)
-	// изменение разделителя полей по умолчанию на табуляцию
-	csvwriter.Comma = '\t'
+	curTimeStr := ""
+	csvwriter.Comma = '#'
 
 	for _, row := range data {
-		temp := []string{row.Name, row.Surname, row.Tel, row.LastAccess}
+		curTimeStr = strconv.FormatInt(row.LastAccess, decimalBase)
+		temp := []string{row.Name, row.Surname, row.Tel, curTimeStr}
 		_ = csvwriter.Write(temp)
 		csvwriter.Flush()
 	}
@@ -156,10 +144,9 @@ func saveCSVFile(filepath string) error {
 	return nil
 }
 
-func deleteEntry(key string) error {
+func deleteEntryByPhone(key string) error {
 	// поиск по индексу телефонного номера, чтобы найти место записи в срезе с данными. Если его нет - сообщение об ошибке
-	// i, ok := indexByTel[key]
-	i, ok := indexByLastAccess[key]
+	i, ok := indexByPhone[key]
 	if !ok {
 		return fmt.Errorf("%s cannot be found", key)
 	}
@@ -168,11 +155,9 @@ func deleteEntry(key string) error {
 	// путём склеивания в новый срез части до элемента и после`
 	data = append(data[:i], data[i+1:]...)
 
-	// обновить индекс (удалить из него запись). забота о нем — та цена, которую вы платите за дополнительную скорость, возникающую благодаря ему
-	// delete(indexByTel, key)
-	delete(indexByLastAccess, key)
+	// обновить индекс (удалить из него запись)
+	delete(indexByPhone, key)
 
-	// сохранить обновленные данные
 	err := saveCSVFile(db)
 	if err != nil {
 		return err
@@ -181,19 +166,19 @@ func deleteEntry(key string) error {
 	return nil
 }
 
-func insert(pS Entry) error {
+func insert(entry Entry) error {
 	// если запись уже есть - не добавляем
-	// _, ok := indexByTel[(pS).Tel]
-	_, ok := indexByLastAccess[(pS).Tel]
+	_, ok := indexByPhone[(entry).Tel]
 	if ok {
-		return fmt.Errorf("%s already exists", pS.Tel)
+		return fmt.Errorf("%s already exists", entry.Tel)
 	}
 
-	data = append(data, pS)
+	data = append(data, entry)
 
 	// обновить индекс
-	// _ = createIndexByTel()
+	_ = createIndexByPhone()
 	_ = createIndexByLastAccess()
+
 	err := saveCSVFile(db)
 	if err != nil {
 		return err
@@ -201,20 +186,19 @@ func insert(pS Entry) error {
 	return nil
 }
 
-func matchTel(tel string) bool {
-	t := []byte(tel)
+func matchPhone(phone string) bool {
+	t := []byte(phone)
 	ctel := regexp.MustCompile(`^+?\d+$`)
 	return ctel.Match(t)
 }
 
-func initS(Name, Surname, Tel string) Entry {
-	isTelMatch := matchTel(Tel)
-	if !isTelMatch {
+func initS(Name, Surname, Phone string) Entry {
+	if !matchPhone(Phone) {
 		fmt.Println("incorrect phone")
 		return Entry{}
 	}
 
-	return Entry{Name: Name, Surname: Surname, Tel: Tel, LastAccess: curTime}
+	return Entry{Name: Name, Surname: Surname, Tel: Phone, LastAccess: curTime}
 }
 
 // телефонная книга заполняется из csv-файла
@@ -227,8 +211,7 @@ func main() {
 	// если файла не существует - создаём пустой
 	_, err := os.Stat(db)
 	if err != nil {
-		fmt.Println("creating", db)
-		// создаём файл
+		fmt.Println("creating...", db)
 		f, err := os.Create(db)
 		if err != nil {
 			f.Close()
@@ -238,7 +221,7 @@ func main() {
 		f.Close()
 	}
 
-	fileInfo, err := os.Stat(db)
+	fileInfo, _ := os.Stat(db)
 	// это обычный файл UNIX?
 	mode := fileInfo.Mode()
 	if !mode.IsRegular() {
@@ -252,22 +235,38 @@ func main() {
 		return
 	}
 
+	lastAccessRaw := ""
+
 	for _, line := range lines {
-		linePrepared := strings.Fields(line[0]) // срез из строк ,разделённых пробелом
+		lineRaw := strings.Fields(line[0]) // срез из строк ,разделённых пробелом
+		linePrepared := strings.Split(lineRaw[0], fieldsDelimiter)
+		lastAccessRaw = linePrepared[3]
+		lastAccess, err := strconv.ParseInt(lastAccessRaw, decimalBase, int64BitSize)
+
+		if err != nil {
+			fmt.Printf("Incorrect value lastAccess: %d", lastAccessRaw)
+			return
+		}
+
 		temp := Entry{
 			Name:       linePrepared[0],
 			Surname:    linePrepared[1],
 			Tel:        linePrepared[2],
-			LastAccess: linePrepared[3],
+			LastAccess: lastAccess,
 		}
 
 		data = append(data, temp)
 	}
 
-	// err = createIndexByTel()
-	err = createIndexByLastAccess()
-	if err != nil {
-		fmt.Println(err)
+	errIndPhone := createIndexByPhone()
+	if errIndPhone != nil {
+		fmt.Println("error creating index by phone: ", errIndPhone)
+		return
+	}
+
+	errIndLastAccess := createIndexByLastAccess()
+	if errIndLastAccess != nil {
+		fmt.Println("error creating index by last access: ", errIndLastAccess)
 		return
 	}
 
@@ -296,12 +295,12 @@ func main() {
 		}
 
 		t := strings.ReplaceAll(arguments[2], "-", "")
-		if !matchTel(t) {
-			fmt.Println("Not a valid telephone number:", t)
+		if !matchPhone(t) {
+			fmt.Println("Not a valid phone:", t)
 			return
 		}
 
-		err := deleteEntry(t)
+		err := deleteEntryByPhone(t)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -312,12 +311,12 @@ func main() {
 		}
 
 		t := strings.ReplaceAll(arguments[2], "-", "")
-		if !matchTel(t) {
-			fmt.Println("Not a valid telephone number:", t)
+		if !matchPhone(t) {
+			fmt.Println("Not a valid phone:", t)
 			return
 		}
 
-		temp := search(t)
+		temp := searchByPhone(t)
 		if temp == nil {
 			fmt.Println("Number not found:", t)
 			return

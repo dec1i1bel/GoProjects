@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // создаём срез из двух массивов
 func arraysToSlice(arr1 []int, arr2 []int) []int {
@@ -41,7 +44,17 @@ func slicesToArray(sl1 []int, sl2 []int) []int {
 	return res
 }
 
+func osArgsToSlice() {
+	args := os.Args
+	res := make(map[int]string)
+	for k, v := range args {
+		res[k] = v
+	}
+	fmt.Println("os_args: ", res)
+}
+
 func main() {
+	osArgsToSlice()
 	arr1 := []int{46, 34, 6, 4, 32}
 	arr2 := []int{635534, 5423}
 

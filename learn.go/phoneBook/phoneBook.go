@@ -19,7 +19,9 @@ type Entry struct {
 }
 
 var data = []Entry{}
-var index = make(map[string]int)
+
+// var indexByTel = make(map[string]int) // индекс db.csv по номеру телефона
+var indexByLastAccess = make(map[string]int) // индекс db.csv по полю LastAccess
 var db = "db.csv"
 var curTime = strconv.FormatInt(time.Now().Unix(), 10)
 
@@ -35,7 +37,8 @@ func search(key string) *Entry {
 	*/
 
 	// поиск использует индекс:
-	i, ok := index[key]
+	// i, ok := indexByTel[key]
+	i, ok := indexByLastAccess[key]
 	if !ok {
 		return nil
 	}
@@ -59,6 +62,12 @@ func populate(n int) {
 		t := time.Now().Format(time.RFC850)
 		data = append(data, Entry{name, surname, n, t})
 	}
+
+	/* заполнение хардкодом
+	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
+	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
+	data = append(data, Entry{"John", "Black", "2109416123", t})
+	*/
 }
 
 // объяс-е кода ф-ии - в randomValuesGenerating/newPass.go
@@ -83,15 +92,20 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-// получаем доступ ко всему срезу data и помещаем пары индекса и значения среза на карту, используя значение в качестве ключа для карты и индекс среза в качестве значения карты
-func createIndex() error {
-	index = make(map[string]int)
+/* получаем доступ ко всему срезу data и помещаем пары индекса и значения среза на карту, используя значение в качестве ключа для карты и индекс среза в качестве значения карты
+func createIndexByTel() error {
+	indexByTel = make(map[string]int)
 	for i, k := range data {
 		key := k.Tel
-		index[key] = i
+		indexByTel[key] = i
 	}
 
 	return nil
+}
+*/
+
+func createIndexByLastAccess() error {
+
 }
 
 func readCSVFile(filepath string) ([][]string, error) {
@@ -144,7 +158,8 @@ func saveCSVFile(filepath string) error {
 
 func deleteEntry(key string) error {
 	// поиск по индексу телефонного номера, чтобы найти место записи в срезе с данными. Если его нет - сообщение об ошибке
-	i, ok := index[key]
+	// i, ok := indexByTel[key]
+	i, ok := indexByLastAccess[key]
 	if !ok {
 		return fmt.Errorf("%s cannot be found", key)
 	}
@@ -154,7 +169,8 @@ func deleteEntry(key string) error {
 	data = append(data[:i], data[i+1:]...)
 
 	// обновить индекс (удалить из него запись). забота о нем — та цена, которую вы платите за дополнительную скорость, возникающую благодаря ему
-	delete(index, key)
+	// delete(indexByTel, key)
+	delete(indexByLastAccess, key)
 
 	// сохранить обновленные данные
 	err := saveCSVFile(db)
@@ -167,21 +183,17 @@ func deleteEntry(key string) error {
 
 func insert(pS Entry) error {
 	// если запись уже есть - не добавляем
-	_, ok := index[(pS).Tel]
+	// _, ok := indexByTel[(pS).Tel]
+	_, ok := indexByLastAccess[(pS).Tel]
 	if ok {
 		return fmt.Errorf("%s already exists", pS.Tel)
 	}
 
 	data = append(data, pS)
 
-	/* заполнение хардкодом
-	data = append(data, Entry{"Mihalis", "Tsoukalos", "2109416471", t})
-	data = append(data, Entry{"Mary", "Doe", "2109416871", t})
-	data = append(data, Entry{"John", "Black", "2109416123", t})
-	*/
-
 	// обновить индекс
-	_ = createIndex()
+	// _ = createIndexByTel()
+	_ = createIndexByLastAccess()
 	err := saveCSVFile(db)
 	if err != nil {
 		return err
@@ -252,7 +264,8 @@ func main() {
 		data = append(data, temp)
 	}
 
-	err = createIndex()
+	// err = createIndexByTel()
+	err = createIndexByLastAccess()
 	if err != nil {
 		fmt.Println(err)
 		return

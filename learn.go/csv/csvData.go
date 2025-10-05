@@ -56,7 +56,8 @@ func saveCSVFile(filepath string) error {
 	defer csvfile.Close()
 	csvwriter := csv.NewWriter(csvfile)
 	// изменение разделителя полей по умолчанию на табуляцию
-	csvwriter.Comma = '\t'
+	// csvwriter.Comma = '\t'
+	csvwriter.Comma = '#'
 
 	for _, row := range myData {
 		temp := []string{row.Name, row.Surname, row.Number, row.LastAccess}
@@ -83,7 +84,6 @@ func main() {
 		return
 	}
 
-	// данные CSV считываются по столбцам — каждая строка представляет собой срез
 	for _, line := range lines {
 		temp := Record{
 			Name:       line[0],

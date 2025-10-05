@@ -34,9 +34,7 @@ func readCSVFile(filepath string) ([][]string, error) {
 
 	defer f.Close()
 
-	// CSV-файл читается весь сразу - ReadAll() (построчно - Read())
-	// тип данных lines — [][]string
-	lines, err := csv.NewReader(f).ReadAll()
+	lines, err := csv.NewReader(f).ReadAll() // построчно - Read()
 
 	if err != nil {
 		return [][]string{}, err
@@ -46,7 +44,7 @@ func readCSVFile(filepath string) ([][]string, error) {
 }
 
 // запись в CSV-файл
-func saveCSVFile(filepath string) error {
+func saveCSVFile(filepath string, delimiter []rune) error {
 	csvfile, err := os.Create(filepath)
 
 	if err != nil {
@@ -55,9 +53,7 @@ func saveCSVFile(filepath string) error {
 
 	defer csvfile.Close()
 	csvwriter := csv.NewWriter(csvfile)
-	// изменение разделителя полей по умолчанию на табуляцию
-	// csvwriter.Comma = '\t'
-	csvwriter.Comma = '#'
+	csvwriter.Comma = delimiter[0]
 
 	for _, row := range myData {
 		temp := []string{row.Name, row.Surname, row.Number, row.LastAccess}
@@ -68,15 +64,17 @@ func saveCSVFile(filepath string) error {
 	return nil
 }
 
-// с помощью readCSVFile() помещает прочитанное в срез myData. Помните, что lines — это срез с двумя измерениями и что каждая строка в lines уже разделена на поля.
+// с помощью readCSVFile() помещает прочитанное в срез myData. lines — это срез с двумя измерениями, и каждая строка в lines уже разделена на поля.
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Println("csvData input output!")
+	args := os.Args
+	if len(args) != 4 {
+		fmt.Println("Usage: <input file name> <output file name> \"<file line fields delimiter>\"")
 		return
 	}
 
-	input := os.Args[1]
-	output := os.Args[2]
+	input := args[1]
+	output := args[2]
+	delimiter := args[3]
 	lines, err := readCSVFile(input)
 
 	if err != nil {
@@ -96,7 +94,9 @@ func main() {
 		fmt.Println("temp: ", temp)
 	}
 
-	err = saveCSVFile(output)
+	delimiterRuned := []rune(delimiter)
+
+	err = saveCSVFile(output, delimiterRuned)
 
 	if err != nil {
 		fmt.Println(err)

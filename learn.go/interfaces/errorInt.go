@@ -13,6 +13,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -56,7 +57,28 @@ func readFile(file string) error {
 		n += len(line)
 		// если достигнут конец файла
 		if err == io.EOF {
-			return emptyFile{true, n}
+			if n == 0 {
+				return emptyFile{true, n}
+			}
+			break
+		} else if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func main() {
+	flag.Parse() // парсинг флагов командной строки вида -n
+	if len(flag.Args()) == 0 {
+		fmt.Println("usage: errorInt <file1>[<file2>...]")
+		return
+	}
+
+	for _, file := range flag.Args() {
+		err := readFile(file)
+		if isFileEmpty(err) {
+			fmt.Println(file, err)
 		}
 	}
 }

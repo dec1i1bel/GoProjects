@@ -79,6 +79,10 @@ func main() {
 		err := readFile(file)
 		if isFileEmpty(err) {
 			fmt.Println(file, err)
+		} else if err != nil {
+			fmt.Println(file, err)
+		} else {
+			fmt.Println(file, "is OK")
 		}
 	}
 }

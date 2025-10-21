@@ -170,5 +170,22 @@ func (a Book2) Swap(i, j int) {
 }
 
 func main() {
+	if len(os.Args) != 1 {
+		CSVFILE = os.Args[1]
+	} else {
+		fmt.Println("No data file!")
+		return
+	}
 
+	_, err := os.Stat(CSVFILE)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(d1) != 0 {
+		sortData(d1)
+	} else {
+		sortData(d2)
+	}
 }

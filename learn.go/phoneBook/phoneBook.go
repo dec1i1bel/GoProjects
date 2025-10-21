@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,11 +19,11 @@ type Entry struct {
 	LastAccess int64
 }
 
-var data = []Entry{}
+// var data = []Entry{}
 
-var indexByPhone = make(map[string]int)     // индекс db.csv по номеру телефона
-var indexByLastAccess = make(map[int64]int) // индекс db.csv по полю LastAccess
-var db = "db.csv"
+var indexByPhone = make(map[string]int)     // индекс CSVFILE.csv по номеру телефона
+var indexByLastAccess = make(map[int64]int) // индекс CSVFILE.csv по полю LastAccess
+var CSVFILE = "CSVFILE.csv"
 
 var decimalBase int = 10
 var int64BitSize int = 64
@@ -30,6 +31,61 @@ var fieldsDelimiter string = "#"
 
 // var curTime = strconv.FormatInt(time.Now().Unix(), decimalBase)
 var curTime = time.Now().Unix()
+
+/* Сортировка записей через sort.Interface */
+// нужно иметь отдельный тип данных‚ для которого реализован sort.Interface
+type PhoneBook []Entry
+
+var data = PhoneBook{}
+
+// реализация sort.Interface
+func (a PhoneBook) Len() int {
+	return len(a)
+}
+
+func (a PhoneBook) Less(i, j int) bool {
+	if a[i].Surname == a[j].Surname {
+		return a[i].Name < a[j].Name
+	}
+	return a[i].Surname < a[j].Surname
+}
+
+func (a PhoneBook) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+/* end */
+
+func setSCVFILE() error {
+	filepath := os.Getenv("PHONEBOOK") // получаем значение переменной среды PHONEBOOK
+	if filepath != "" {
+		CSVFILE = filepath
+	}
+
+	// если файла не существует - создаём пустой
+	_, err := os.Stat(CSVFILE)
+	if err != nil {
+		fmt.Println("creating...", CSVFILE) // создание файла в существующей папке
+		f, err := os.Create(CSVFILE)
+		if err != nil {
+			f.Close()
+			fmt.Println(err)
+			return err
+		}
+		f.Close()
+		// populate(5)
+	}
+
+	fileInfo, _ := os.Stat(CSVFILE)
+	// это обычный файл UNIX?
+	mode := fileInfo.Mode()
+	if !mode.IsRegular() {
+		fmt.Println(CSVFILE, "not a regular UNIX file")
+		return err
+	}
+
+	return nil
+}
 
 func searchByPhone(key string) *Entry {
 	i, ok := indexByPhone[key]
@@ -41,6 +97,7 @@ func searchByPhone(key string) *Entry {
 }
 
 func list() {
+	sort.Sort(PhoneBook(data))
 	for _, v := range data {
 		fmt.Println(v)
 	}
@@ -52,7 +109,7 @@ func populate(n int) {
 		name := getString(4)
 		surname := getString(5)
 		n := strconv.Itoa(random(100, 199))
-		data = append(data, Entry{name, surname, n, curTime})
+		insert(Entry{name, surname, n, curTime})
 	}
 }
 
@@ -158,7 +215,7 @@ func deleteEntryByPhone(key string) error {
 	// обновить индекс (удалить из него запись)
 	delete(indexByPhone, key)
 
-	err := saveCSVFile(db)
+	err := saveCSVFile(CSVFILE)
 	if err != nil {
 		return err
 	}
@@ -179,7 +236,7 @@ func insert(entry Entry) error {
 	_ = createIndexByPhone()
 	_ = createIndexByLastAccess()
 
-	err := saveCSVFile(db)
+	err := saveCSVFile(CSVFILE)
 	if err != nil {
 		return err
 	}
@@ -203,33 +260,15 @@ func initS(Name, Surname, Phone string) Entry {
 
 // телефонная книга заполняется из csv-файла
 func main() {
+	setSCVFILE()
+
 	arguments := os.Args
 	if len((arguments)) == 1 {
 		fmt.Println("Usage: insert|delete|search|list <arguments>")
 		return
 	}
-	// если файла не существует - создаём пустой
-	_, err := os.Stat(db)
-	if err != nil {
-		fmt.Println("creating...", db)
-		f, err := os.Create(db)
-		if err != nil {
-			f.Close()
-			fmt.Println(err)
-			return
-		}
-		f.Close()
-	}
 
-	fileInfo, _ := os.Stat(db)
-	// это обычный файл UNIX?
-	mode := fileInfo.Mode()
-	if !mode.IsRegular() {
-		fmt.Println(db, "not a regular UNIX file")
-		return
-	}
-
-	lines, err := readCSVFile(db)
+	lines, err := readCSVFile(CSVFILE)
 	if err != nil {
 		fmt.Println(err)
 		return

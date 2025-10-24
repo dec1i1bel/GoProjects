@@ -91,7 +91,6 @@ func setSCVFILE() error {
 			return err
 		}
 		f.Close()
-		// populate(5)
 	}
 
 	fileInfo, _ := os.Stat(CSVFILE)
@@ -110,8 +109,8 @@ func searchByPhone(key string) *Entry1 {
 	if !ok {
 		return nil
 	}
-	data[i].LastAccess = curTime
-	return &data[i]
+	data1[i].LastAccess = curTime
+	return &data1[i]
 }
 
 func list(d interface{}) {
@@ -206,7 +205,9 @@ func readCSVFile(filepath string) ([][]string, error) {
 	// Первая строка CSV-файла определяет его формат. Следовательно, нам нужна переменная флага для указания того, имеем ли мы дело с первой строкой (firstLine)
 	var firstLine bool = true
 	var format1 bool = true
-	for _, line := range lines {
+	for _, lineRaw := range lines {
+		line := strings.Split(lineRaw, fieldsDelimiter)
+		fmt.Println("line: ", line, len(line))
 		if firstLine {
 			// в строке файла либо 4, либо 5 полей. всё остальное - ошибка
 			if len(line) == 4 {
@@ -218,6 +219,8 @@ func readCSVFile(filepath string) ([][]string, error) {
 			}
 			firstLine = false
 		}
+
+		fmt.Println("line: ", line)
 
 		if format1 {
 			if len(line) == 4 {

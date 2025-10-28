@@ -32,6 +32,8 @@ type PhoneBook2 []Entry2
 
 var data1 = PhoneBook1{}
 var data2 = PhoneBook2{}
+var reverse1 = PhoneBook1{}
+var reverse2 = PhoneBook2{}
 
 var indexByPhone = make(map[string]int)     // индекс бд csv по номеру телефона
 var indexByLastAccess = make(map[int64]int) // индекс бд csv по полю LastAccess
@@ -130,6 +132,24 @@ func list(d interface{}) {
 	}
 }
 
+func reverse(d interface{}) {
+	switch T := d.(type) {
+	case PhoneBook1:
+		data := d.(PhoneBook1)
+
+		for _, v := range data {
+			fmt.Println(v)
+		}
+	case PhoneBook2:
+		data := d.(PhoneBook2)
+		for _, v := range data {
+			fmt.Println(v)
+		}
+	default:
+		fmt.Println("Not supported type: %T\n", T)
+	}
+}
+
 // заполнение рандомными данными
 func populate(n int) {
 	for i := 0; i < n; i++ {
@@ -206,8 +226,9 @@ func readCSVFile(filepath string) ([][]string, error) {
 	var firstLine bool = true
 	var format1 bool = true
 	for _, lineRaw := range lines {
-		line := strings.Split(lineRaw, fieldsDelimiter)
-		fmt.Println("line: ", line, len(line))
+		// for _, line := range lines {
+		line := strings.Split(lineRaw[0], fieldsDelimiter)
+		// fmt.Println("line: ", line, len(line))
 		if firstLine {
 			// в строке файла либо 4, либо 5 полей. всё остальное - ошибка
 			if len(line) == 4 {
@@ -220,7 +241,7 @@ func readCSVFile(filepath string) ([][]string, error) {
 			firstLine = false
 		}
 
-		fmt.Println("line: ", line)
+		// fmt.Println("line: ", line)
 
 		if format1 {
 			if len(line) == 4 {
@@ -262,6 +283,25 @@ func sortData(data interface{}) {
 	case PhoneBook2:
 		d := data.(PhoneBook2)
 		sort.Sort(PhoneBook2(d))
+		list(d)
+	default:
+		fmt.Printf("Not supported type: %T\n", T)
+	}
+}
+
+func reverseData(data interface{}) {
+	switch T := data.(type) {
+	case PhoneBook1:
+		d := data.(PhoneBook1)
+		sort.Reverse(PhoneBook1(d))
+		list(d)
+	case PhoneBook2:
+		d := data.(PhoneBook2)
+		// fmt.Println("result")
+		// fmt.Println(d)
+		sort.Reverse(PhoneBook2(d))
+		// fmt.Println("result_2")
+		// fmt.Println(d)
 		list(d)
 	default:
 		fmt.Printf("Not supported type: %T\n", T)
@@ -358,33 +398,10 @@ func main() {
 		return
 	}
 
-	lines, err := readCSVFile(CSVFILE)
+	_, err := readCSVFile(CSVFILE)
 	if err != nil {
 		fmt.Println(err)
 		return
-	}
-
-	lastAccessRaw := ""
-
-	for _, line := range lines {
-		lineRaw := strings.Fields(line[0]) // срез из строк ,разделённых пробелом
-		linePrepared := strings.Split(lineRaw[0], fieldsDelimiter)
-		lastAccessRaw = linePrepared[3]
-		lastAccess, err := strconv.ParseInt(lastAccessRaw, 10, 64)
-
-		if err != nil {
-			fmt.Printf("Incorrect value lastAccess: %d", lastAccessRaw)
-			return
-		}
-
-		temp := Entry1{
-			Name:       linePrepared[0],
-			Surname:    linePrepared[1],
-			Tel:        linePrepared[2],
-			LastAccess: lastAccess,
-		}
-
-		data1 = append(data1, temp)
 	}
 
 	errIndPhone := createIndexByPhone()
@@ -455,12 +472,15 @@ func main() {
 	case "list":
 		if len(data1) == 0 {
 			sortData(data2)
-			list(data2)
 		} else {
 			sortData(data1)
-			list(data1)
 		}
-
+	case "reverse":
+		if len(data1) == 0 {
+			reverseData(data2)
+		} else {
+			reverseData(data1)
+		}
 	default:
 		fmt.Println("Not a valid option")
 	}

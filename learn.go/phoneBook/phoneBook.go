@@ -32,8 +32,6 @@ type PhoneBook2 []Entry2
 
 var data1 = PhoneBook1{}
 var data2 = PhoneBook2{}
-var reverse1 = PhoneBook1{}
-var reverse2 = PhoneBook2{}
 
 var indexByPhone = make(map[string]int)     // индекс бд csv по номеру телефона
 var indexByLastAccess = make(map[int64]int) // индекс бд csv по полю LastAccess
@@ -119,24 +117,6 @@ func list(d interface{}) {
 	switch T := d.(type) {
 	case PhoneBook1:
 		data := d.(PhoneBook1)
-		for _, v := range data {
-			fmt.Println(v)
-		}
-	case PhoneBook2:
-		data := d.(PhoneBook2)
-		for _, v := range data {
-			fmt.Println(v)
-		}
-	default:
-		fmt.Println("Not supported type: %T\n", T)
-	}
-}
-
-func reverse(d interface{}) {
-	switch T := d.(type) {
-	case PhoneBook1:
-		data := d.(PhoneBook1)
-
 		for _, v := range data {
 			fmt.Println(v)
 		}
@@ -289,22 +269,26 @@ func sortData(data interface{}) {
 	}
 }
 
-func reverseData(data interface{}) {
-	switch T := data.(type) {
+func reverseData(d interface{}) {
+	switch T := d.(type) {
 	case PhoneBook1:
-		d := data.(PhoneBook1)
-		sort.Reverse(PhoneBook1(d))
-		list(d)
+		data := d.(PhoneBook1)
+		fmt.Println("data1")
+		fmt.Println(data)
+
+		for i := len(data) - 1; i >= 0; i -= 1 {
+			fmt.Println(data[i])
+		}
 	case PhoneBook2:
-		d := data.(PhoneBook2)
-		// fmt.Println("result")
-		// fmt.Println(d)
-		sort.Reverse(PhoneBook2(d))
-		// fmt.Println("result_2")
-		// fmt.Println(d)
-		list(d)
+		data := d.(PhoneBook2)
+		fmt.Println("data2")
+		fmt.Println(data)
+
+		for i := len(data) - 1; i >= 0; i -= 1 {
+			fmt.Println(data[i])
+		}
 	default:
-		fmt.Printf("Not supported type: %T\n", T)
+		fmt.Println("Not supported type: %T\n", T)
 	}
 }
 

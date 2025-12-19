@@ -2,10 +2,13 @@ module learn/learn.go
 
 go 1.24.2
 
+require github.com/dec1i1bel/post05 v0.0.0-20251121054153-1e4414b4b228
+
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/mactsouk/post05 v0.0.0-20210707111726-e78445111bbb // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect

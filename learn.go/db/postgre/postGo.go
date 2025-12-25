@@ -3,13 +3,10 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
 
-	// тестируемый пакет
 	"github.com/dec1i1bel/post05"
 )
 
-// величины - хакрдкод в целях тестирования
 var MIN = 0
 var MAX = 26
 
@@ -39,48 +36,75 @@ func main() {
 	post05.Hostname = "localhost"
 	post05.Port = 5432
 	post05.Username = "postgres"
-	post05.Password = ""
+	post05.Password = "mysecretpassword"
 	post05.Database = "postgres"
+	isEmptyDb, err := post05.CheckIfEmptyDb()
 
-	data, err := post05.ListUsers()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("func main: error check if empty db:", err)
+		return
 	}
 
-	for _, v := range data {
-		fmt.Println(v)
+	if isEmptyDb {
+		fmt.Println("func main: db is empty, no ListUsers will be called")
 	}
 
-	SEED := time.Now().Unix()
-	rand.New(rand.NewSource(SEED)) //  rand.Seed(SEED) устарело
-	random_username := getString(5)
+	if !isEmptyDb {
+		data, err := post05.ListUsers()
 
-	t := post05.Userdata{
-		Username:    random_username,
-		Name:        "Test",
-		Surname:     "user 1",
-		Description: "test user 1 description",
+		if err != nil {
+			fmt.Println("error using ListUsers:", err)
+		}
+
+		for _, v := range data {
+			fmt.Println("func main - row:", v)
+		}
 	}
-	id := post05.AddUser(t)
-	if id == -1 {
-		fmt.Println("Error adding user", t.Username)
+
+	newUserName := getString(5)
+
+	fmt.Println("newUserName:", newUserName)
+
+	curUserId := 0
+	if !isEmptyDb {
+		curUserId = post05.FindUserId(newUserName)
 	}
-	err = post05.DeleteUser(id)
-	if err != nil {
-		fmt.Println(err)
+
+	udata := post05.UserData{
+		Username:    newUserName,
+		Name:        "Test Name post05",
+		Surname:     "Test Surname post05",
+		Description: "Test Description post05",
 	}
-	post05.AddUser(t)
-	if id == -1 {
-		fmt.Println("error adding 2nd user", t.Username)
+
+	newUserId := 0
+	if curUserId <= 0 {
+		newUserId = post05.AddUser(udata)
 	}
-	t = post05.Userdata{
-		Username:    random_username,
-		Name:        "Test",
-		Surname:     "User 1",
-		Description: "this night not be me",
-	}
-	err = post05.UpdateUser(t)
-	if err != nil {
-		fmt.Println(err)
+
+	if newUserId > 0 {
+		udata = post05.UserData{
+			ID:          newUserId,
+			Username:    newUserName,
+			Name:        "Test",
+			Surname:     "User 1",
+			Description: "this night not be me",
+		}
+
+		err = post05.UpdateUser(udata)
+		if err != nil {
+			fmt.Println("error using UpdateUser:", err)
+		} else {
+			fmt.Printf("user <%s> with id <%d> updated successfully\n", newUserName, newUserId)
+		}
+
+		err = post05.DeleteUser(newUserId)
+		if err != nil {
+			fmt.Println("error using DeleteUser", err)
+		} else {
+			fmt.Printf("user <%s> with id <%d> deleted successfully\n", newUserName, newUserId)
+		}
+	} else {
+		fmt.Println("Error adding user", udata.Username)
 	}
 }

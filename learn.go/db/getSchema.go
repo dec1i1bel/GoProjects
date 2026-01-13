@@ -1,6 +1,6 @@
 package main
 
-// Утилита проверяет возможность подключиться к базе данных PostgreSQL и получить список доступных баз данных и таблиц в этой базе данных и public схеме — вся информация о подключении предоставляется в качестве аргументов командной строки
+// Util to check availability to connect PostgreSQL DB
 
 import (
 	"database/sql"
@@ -12,25 +12,6 @@ import (
 )
 
 var db *sql.DB
-
-func findTables() {
-	query := `SELECT table_name FROM information_schema.tables WHERE atble_schema='public' ORDER BY table_name`
-	rows, err := db.Query(query)
-	if err != nil {
-		fmt.Println("Query:", err)
-		return
-	}
-	for rows.Next() {
-		var name string
-		err = rows.Scan(&name)
-		if err != nil {
-			fmt.Println("Scan", err)
-			return
-		}
-		fmt.Println("+T", name)
-	}
-	defer rows.Close()
-}
 
 func main() {
 	arguments := os.Args
